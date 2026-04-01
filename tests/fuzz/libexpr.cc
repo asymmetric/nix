@@ -13,6 +13,7 @@
 #include "nix/store/store-open.hh"
 #include "nix/util/canon-path.hh"
 #include "nix/util/error.hh"
+#include "nix/util/logging.hh"
 #include "nix/util/file-system.hh"
 
 namespace nix
@@ -21,6 +22,7 @@ namespace nix
     {
         initNix();
         initGC();
+        verbosity = lvlError;
         return 0;
     }
 
