@@ -68,6 +68,9 @@ if get_option('json-schema-checks')
   subproject('json-schema-checks')
 endif
 
+# Fuzz targets
+subdir('tests')
+
 # Static Analysis
 # Build the custom clang-tidy plugin if LLVM is available.
 # required: false → gracefully skipped if dependency('LLVM') fails.

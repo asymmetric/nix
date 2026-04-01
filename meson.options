@@ -34,3 +34,10 @@ option(
   value : true,
   description : 'Check JSON schema validity of schemas and examples (requires jv)',
 )
+
+option(
+  'fuzz',
+  type : 'boolean',
+  value : false,
+  description : 'Build fuzz targets (requires libFuzzer)',
+)
