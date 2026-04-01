@@ -5,7 +5,7 @@ libmain_dep = dependency('nix-main')
 cxx = meson.get_compiler('cpp')
 
 if get_option('fuzz')
-  fuzzer_flags = ['-fsanitize=fuzzer']
+  fuzzer_flags = ['-fsanitize=fuzzer,address,undefined']
   if not cxx.has_argument(fuzzer_flags[0])
     error('fuzz option requires -fsanitize=fuzzer support')
   endif
