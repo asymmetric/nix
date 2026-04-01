@@ -39,5 +39,5 @@ option(
   'fuzz',
   type : 'boolean',
   value : false,
-  description : 'Build fuzz targets (requires libFuzzer)',
+  description : 'Build fuzz targets (requires -fsanitize=fuzzer capable compiler)',
 )
