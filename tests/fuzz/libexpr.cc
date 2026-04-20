@@ -3,6 +3,7 @@
 #include <cstring>
 #include <exception>
 #include <string>
+#include <sanitizer/lsan_interface.h>
 
 #include "nix/fetchers/fetch-settings.hh"
 #include "nix/expr/eval.hh"
@@ -16,36 +17,31 @@
 #include "nix/util/logging.hh"
 #include "nix/util/file-system.hh"
 
-namespace nix
+namespace nix {
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size)
 {
-    extern "C" int LLVMFuzzerInitialize(int *, char ***)
-    {
+    static fetchers::Settings fetchSettings;
+    static bool readOnlyMode = true;
+    static EvalSettings evalSettings{readOnlyMode};
+    static EvalState * state = [] {
         initNix();
         initGC();
         verbosity = lvlError;
-        return 0;
+        __lsan_disable();
+        ref<Store> store = openStore("dummy://");
+        auto * s = new EvalState({}, store, fetchSettings, evalSettings, nullptr);
+        __lsan_enable();
+        return s;
+    }();
+
+    try {
+        auto ptr = reinterpret_cast<const char *>(data);
+        std::string input(ptr, size);
+        state->parseExprFromString(input, state->rootPath(CanonPath::root));
+    } catch (const std::exception &) {
     }
 
-    extern "C" int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size)
-    {
-        static ref<Store> store = openStore("dummy://");
-        static fetchers::Settings fetchSettings;
-        static bool readOnlyMode = true;
-        static EvalSettings evalSettings{readOnlyMode};
-        static EvalState state({}, store, fetchSettings, evalSettings, nullptr);
-
-        try
-        {
-            auto ptr = reinterpret_cast<const char *>(data);
-            std::string input(ptr, size);
-
-            state.parseExprFromString(input, state.rootPath(CanonPath::root));
-        }
-        catch(const std::exception & e)
-        {
-            // ignore errors
-        }
-
-        return 0;
-    }
+    return 0;
 }
+
+} // namespace nix

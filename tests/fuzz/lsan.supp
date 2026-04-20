@@ -1,0 +1,3 @@
+leak:nix::ExprAttrs::moveDataToAllocator
+leak:makeCall
+leak:nix::ParserState::addAttr
