@@ -3,7 +3,6 @@
 #include <cstring>
 #include <exception>
 #include <string>
-#include <sanitizer/lsan_interface.h>
 
 #include "nix/fetchers/fetch-settings.hh"
 #include "nix/expr/eval.hh"
@@ -27,10 +26,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size)
         initNix();
         initGC();
         verbosity = lvlError;
-        __lsan_disable();
         ref<Store> store = openStore("dummy://");
         auto * s = new EvalState({}, store, fetchSettings, evalSettings, nullptr);
-        __lsan_enable();
         return s;
     }();
 

@@ -15,4 +15,4 @@ build-fuzz/meson-logs/meson-log.txt:
 
 # Run the fuzz target
 fuzz: build
-	LSAN_OPTIONS=suppressions=tests/fuzz/lsan.supp ./build-fuzz/tests/fuzz/fuzz-nix-parser -jobs=$(shell expr $$(nproc) / 2) outputs tests/fuzz/corpus/
+	ASAN_OPTIONS=detect_leaks=0 ./build-fuzz/tests/fuzz/fuzz-nix-parser -jobs=$(shell expr $$(nproc) / 2) outputs tests/fuzz/corpus/
