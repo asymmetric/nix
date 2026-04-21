@@ -20,23 +20,22 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size)
     static fetchers::Settings fetchSettings;
     static bool readOnlyMode = true;
     static EvalSettings evalSettings{readOnlyMode};
-    static EvalState * state = [] {
+    static ref<Store> store = [] {
         initNix();
         initGC();
         verbosity = lvlError;
-        ref<Store> store = openStore("dummy://");
-        auto * s = new EvalState({}, store, fetchSettings, evalSettings, nullptr);
-        return s;
+        return openStore("dummy://");
     }();
+
+    EvalState state({}, store, fetchSettings, evalSettings, nullptr);
 
     try {
         auto ptr = reinterpret_cast<const char *>(data);
         std::string input(ptr, size);
-        state->parseExprFromString(input, state->rootPath(CanonPath::root));
+        state.parseExprFromString(input, state.rootPath(CanonPath::root));
     } catch (const std::exception &) {
     }
 
     return 0;
 }
-
 } // namespace nix
