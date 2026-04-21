@@ -15,24 +15,36 @@
 #include "nix/util/logging.hh"
 
 namespace nix {
+
+static fetchers::Settings fetchSettings;
+static bool readOnlyMode = true;
+static EvalSettings evalSettings{readOnlyMode};
+static ref<Store> * store = [] {
+    initNix();
+    initGC();
+    verbosity = lvlError;
+    return new ref<Store>(openStore("dummy://"));
+}();
+
+static EvalState * makeState()
+{
+    return new EvalState({}, *store, fetchSettings, evalSettings, nullptr);
+}
+
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size)
 {
-    static fetchers::Settings fetchSettings;
-    static bool readOnlyMode = true;
-    static EvalSettings evalSettings{readOnlyMode};
-    static ref<Store> store = [] {
-        initNix();
-        initGC();
-        verbosity = lvlError;
-        return openStore("dummy://");
-    }();
 
-    EvalState state({}, store, fetchSettings, evalSettings, nullptr);
+    static EvalState * state = makeState();
+    static int count = 0;
+    if (++count % 1000 == 0) {
+        delete state;
+        state = makeState();
+    }
 
     try {
         auto ptr = reinterpret_cast<const char *>(data);
         std::string input(ptr, size);
-        state.parseExprFromString(input, state.rootPath(CanonPath::root));
+        state->parseExprFromString(input, state->rootPath(CanonPath::root));
     } catch (const std::exception &) {
     }
 
