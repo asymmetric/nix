@@ -8,13 +8,11 @@
 #include "nix/expr/eval.hh"
 #include "nix/expr/eval-gc.hh"
 #include "nix/expr/eval-settings.hh"
-#include "nix/expr/search-path.hh"
 #include "nix/main/shared.hh"
 #include "nix/store/store-open.hh"
 #include "nix/util/canon-path.hh"
 #include "nix/util/error.hh"
 #include "nix/util/logging.hh"
-#include "nix/util/file-system.hh"
 
 namespace nix {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size)
