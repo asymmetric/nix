@@ -1,0 +1,34 @@
+.PHONY: fuzz fuzz-parallel build corpus reconfigure
+
+BUILD_DIR    = build-afl
+FINDINGS_DIR = outputs
+NIX_BIN      = $(BUILD_DIR)/src/nix/nix
+NIX_ARGS     = --eval --strict --option restrict-eval true --dry-run
+
+build: $(BUILD_DIR)/meson-logs/meson-log.txt
+	meson compile -C $(BUILD_DIR) nix
+
+$(BUILD_DIR)/meson-logs/meson-log.txt:
+	CC=afl-clang-fast CXX=afl-clang-fast++ meson setup $(BUILD_DIR)
+
+corpus: $(FINDINGS_DIR)/corpus
+$(FINDINGS_DIR)/corpus:
+	mkdir -p $@
+	cp tests/functional/lang/*.nix $@/
+
+reconfigure:
+	CC=afl-clang-fast CXX=afl-clang-fast++ meson setup --reconfigure $(BUILD_DIR)
+
+AFL_ENV = AFL_SKIP_CPUFREQ=1 AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 GC_INITIAL_HEAP_SIZE=$$((8 * 1024 * 1024))
+AFL_CMD = afl-fuzz -i $(FINDINGS_DIR)/corpus -o $(FINDINGS_DIR)/fuzz-outputs -m 300
+WORKERS = $(shell expr $$(nproc) / 2)
+
+fuzz: build corpus
+	mkdir -p $(FINDINGS_DIR)/fuzz-outputs
+	$(AFL_ENV) $(AFL_CMD) -- $(NIX_BIN) $(NIX_ARGS) @@
+
+fuzz-parallel: build corpus
+	mkdir -p $(FINDINGS_DIR)/fuzz-outputs
+	$(foreach i,$(shell seq 1 $(WORKERS)), \
+		$(AFL_ENV) $(AFL_CMD) -S worker$(i) -- $(NIX_BIN) $(NIX_ARGS) @@ &)
+	$(AFL_ENV) $(AFL_CMD) -M main -- $(NIX_BIN) $(NIX_ARGS) @@

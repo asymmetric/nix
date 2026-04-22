@@ -327,7 +327,8 @@ nixComponents.callPackage (
             ++ lib.optional (stdenv.cc.isClang && stdenv.hostPlatform == stdenv.buildPlatform) (
               lib.hiPrio pkgs.buildPackages.clang-tools
             )
-            ++ lib.optional stdenv.hostPlatform.isLinux pkgs.buildPackages.mold-wrapped;
+            ++ lib.optional stdenv.hostPlatform.isLinux pkgs.buildPackages.mold-wrapped
+            ++ lib.optional stdenv.cc.isClang pkgs.buildPackages.aflplusplus;
         in
         # FIXME: separateDebugInfo = false doesn't actually prevent -Wa,--compress-debug-sections
         # from making its way into NIX_CFLAGS_COMPILE.
