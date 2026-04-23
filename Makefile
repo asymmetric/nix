@@ -5,11 +5,13 @@ FINDINGS_DIR = outputs
 NIX_BIN      = $(BUILD_DIR)/src/nix/nix
 NIX_ARGS     = --eval --strict --option restrict-eval true --dry-run
 
+MESON_SETUP = CC=afl-clang-lto CXX=afl-clang-lto++ meson setup -Dafl=true
+
 build: $(BUILD_DIR)/meson-logs/meson-log.txt
 	meson compile -C $(BUILD_DIR) nix
 
 $(BUILD_DIR)/meson-logs/meson-log.txt:
-	CC=afl-clang-fast CXX=afl-clang-fast++ meson setup $(BUILD_DIR)
+	$(MESON_SETUP) $(BUILD_DIR)
 
 corpus: $(FINDINGS_DIR)/corpus
 $(FINDINGS_DIR)/corpus:
@@ -17,7 +19,7 @@ $(FINDINGS_DIR)/corpus:
 	cp tests/functional/lang/*.nix $@/
 
 reconfigure:
-	CC=afl-clang-fast CXX=afl-clang-fast++ meson setup --reconfigure $(BUILD_DIR)
+	$(MESON_SETUP) --reconfigure $(BUILD_DIR)
 
 AFL_ENV = AFL_SKIP_CPUFREQ=1 AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 GC_INITIAL_HEAP_SIZE=$$((8 * 1024 * 1024))
 AFL_CMD = afl-fuzz -i $(FINDINGS_DIR)/corpus -o $(FINDINGS_DIR)/fuzz-outputs -m 300
