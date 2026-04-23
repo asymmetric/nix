@@ -34,3 +34,10 @@ option(
   value : true,
   description : 'Check JSON schema validity of schemas and examples (requires jv)',
 )
+
+option(
+  'afl',
+  type : 'boolean',
+  value : false,
+  description : 'Build for AFL++ fuzzing (requires afl-clang-lto or afl-clang-fast as CC/CXX)',
+)
