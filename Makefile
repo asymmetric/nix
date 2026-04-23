@@ -21,8 +21,11 @@ $(FINDINGS_DIR)/corpus:
 reconfigure:
 	$(MESON_SETUP) --reconfigure $(BUILD_DIR)
 
-AFL_ENV = AFL_SKIP_CPUFREQ=1 AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 GC_INITIAL_HEAP_SIZE=$$((8 * 1024 * 1024))
 AFL_CMD = afl-fuzz -i $(FINDINGS_DIR)/corpus -o $(FINDINGS_DIR)/fuzz-outputs -m 300
+AFL_ENV = AFL_SKIP_CPUFREQ=1 \
+          AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
+          AFL_AUTORESUME=1 \
+          GC_INITIAL_HEAP_SIZE=$$((8 * 1024 * 1024))
 WORKERS = $(shell expr $$(nproc) / 2)
 
 fuzz: build corpus
