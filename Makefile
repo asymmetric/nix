@@ -1,4 +1,4 @@
-.PHONY: fuzz fuzz-parallel build corpus reconfigure
+.PHONY: fuzz fuzz-parallel stop build corpus reconfigure
 
 BUILD_DIR    = build-afl
 FINDINGS_DIR = outputs
@@ -29,6 +29,11 @@ fuzz: build corpus
 
 fuzz-parallel: build corpus
 	mkdir -p $(FINDINGS_DIR)/fuzz-outputs
+	$(AFL_ENV) $(AFL_CMD) -M main -- $(NIX_BIN) $(NIX_ARGS) @@ </dev/null >$(FINDINGS_DIR)/main.log 2>&1 &
 	$(foreach i,$(shell seq 1 $(WORKERS)), \
-		$(AFL_ENV) $(AFL_CMD) -S worker$(i) -- $(NIX_BIN) $(NIX_ARGS) @@ &)
-	$(AFL_ENV) $(AFL_CMD) -M main -- $(NIX_BIN) $(NIX_ARGS) @@
+		$(AFL_ENV) $(AFL_CMD) -S worker$(i) -- $(NIX_BIN) $(NIX_ARGS) @@ </dev/null >$(FINDINGS_DIR)/worker$(i).log 2>&1 &)
+	sleep 2
+	watch --color afl-whatsup -s $(FINDINGS_DIR)/fuzz-outputs
+
+stop:
+	pkill afl-fuzz || true
