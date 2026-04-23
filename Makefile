@@ -26,17 +26,38 @@ AFL_ENV = AFL_SKIP_CPUFREQ=1 \
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
           AFL_AUTORESUME=1 \
           GC_INITIAL_HEAP_SIZE=$$((8 * 1024 * 1024))
-WORKERS = $(shell expr $$(nproc) / 2)
-
 fuzz: build corpus
-	mkdir -p $(FINDINGS_DIR)/fuzz-outputs
 	$(AFL_ENV) $(AFL_CMD) -- $(NIX_BIN) $(NIX_ARGS) @@
+
+WORKER = $(AFL_ENV) $(AFL_CMD) -S
+LOG    = </dev/null >$(FINDINGS_DIR)
 
 fuzz-parallel: build corpus
 	mkdir -p $(FINDINGS_DIR)/fuzz-outputs
-	$(AFL_ENV) $(AFL_CMD) -M main -- $(NIX_BIN) $(NIX_ARGS) @@ </dev/null >$(FINDINGS_DIR)/main.log 2>&1 &
-	$(foreach i,$(shell seq 1 $(WORKERS)), \
-		$(AFL_ENV) $(AFL_CMD) -S worker$(i) -- $(NIX_BIN) $(NIX_ARGS) @@ </dev/null >$(FINDINGS_DIR)/worker$(i).log 2>&1 &)
+	# Main: final sync so secondaries pull from it
+	AFL_FINAL_SYNC=1 $(AFL_ENV) $(AFL_CMD) -M main \
+		-- $(NIX_BIN) $(NIX_ARGS) @@ $(LOG)/main.log 2>&1 &
+	# MOpt mutator
+	$(WORKER) mopt      -L 0 \
+		-- $(NIX_BIN) $(NIX_ARGS) @@ $(LOG)/mopt.log 2>&1 &
+	# Explore, no trim
+	AFL_DISABLE_TRIM=1 $(WORKER) explore  -p explore \
+		-- $(NIX_BIN) $(NIX_ARGS) @@ $(LOG)/explore.log 2>&1 &
+	# Exploit
+	$(WORKER) exploit   -p exploit \
+		-- $(NIX_BIN) $(NIX_ARGS) @@ $(LOG)/exploit.log 2>&1 &
+	# Rare + old queue cycling
+	$(WORKER) rare      -p rare -Z \
+		-- $(NIX_BIN) $(NIX_ARGS) @@ $(LOG)/rare.log 2>&1 &
+	# COE
+	$(WORKER) coe       -p coe \
+		-- $(NIX_BIN) $(NIX_ARGS) @@ $(LOG)/coe.log 2>&1 &
+	# ASCII input format hint
+	$(WORKER) ascii     -a ascii -p fast \
+		-- $(NIX_BIN) $(NIX_ARGS) @@ $(LOG)/ascii.log 2>&1 &
+	# Binary input format hint, no trim
+	AFL_DISABLE_TRIM=1 $(WORKER) binary   -a binary -p fast \
+		-- $(NIX_BIN) $(NIX_ARGS) @@ $(LOG)/binary.log 2>&1 &
 	sleep 2
 	watch --color afl-whatsup -s $(FINDINGS_DIR)/fuzz-outputs
 
