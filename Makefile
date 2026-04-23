@@ -5,7 +5,7 @@ FINDINGS_DIR = outputs
 NIX_BIN      = $(BUILD_DIR)/src/nix/nix
 NIX_ARGS     = eval --file --option restrict-eval true
 
-MESON_SETUP = CC=afl-clang-lto CXX=afl-clang-lto++ meson setup -Dafl=true
+MESON_SETUP = CC=afl-clang-fast CXX=afl-clang-fast++ meson setup -Dafl=true
 
 build: $(BUILD_DIR)/meson-logs/meson-log.txt
 	meson compile -C $(BUILD_DIR) nix
