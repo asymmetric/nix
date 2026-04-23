@@ -3,7 +3,7 @@
 BUILD_DIR    = build-afl
 FINDINGS_DIR = outputs
 NIX_BIN      = $(BUILD_DIR)/src/nix/nix
-NIX_ARGS     = --eval --strict --option restrict-eval true --dry-run
+NIX_ARGS     = eval --file --option restrict-eval true
 
 MESON_SETUP = CC=afl-clang-lto CXX=afl-clang-lto++ meson setup -Dafl=true
 
