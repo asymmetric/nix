@@ -45,15 +45,15 @@ subproject('libexpr-c')
 subproject('libflake-c')
 subproject('libmain-c')
 
-asan_enabled = 'address' in get_option('b_sanitize') or get_option('afl')
+asan_enabled = 'address' in get_option('b_sanitize')
 
 if get_option('afl')
   cxx = meson.get_compiler('cpp')
   if not cxx.get_id().contains('clang')
     error('afl option requires a clang-based compiler (afl-clang-lto or afl-clang-fast)')
   endif
-  add_project_arguments('-fsanitize=address,undefined', language : ['c', 'cpp'])
-  add_project_link_arguments('-fsanitize=address,undefined', language : ['c', 'cpp'])
+  add_project_arguments('-fsanitize=undefined', language : ['c', 'cpp'])
+  add_project_link_arguments('-fsanitize=undefined', language : ['c', 'cpp'])
 endif
 
 # Language Bindings
