@@ -103,6 +103,8 @@ class JSONSax : nlohmann::json_sax<json>
 
     EvalState & state;
     std::unique_ptr<JSONState> rs;
+    size_t depth = 0;
+    static constexpr size_t maxDepth = 2000;
 
 public:
     JSONSax(EvalState & state, Value & v)
@@ -167,6 +169,8 @@ public:
 
     bool start_object(std::size_t len) override
     {
+        if (++depth > maxDepth)
+            throw JSONParseError("JSON input exceeds maximum nesting depth of %d", maxDepth);
         rs = std::make_unique<JSONObjectState>(std::move(rs));
         return true;
     }
@@ -179,6 +183,7 @@ public:
 
     bool end_object() override
     {
+        --depth;
         rs = rs->resolve(state);
         rs->add();
         return true;
@@ -191,6 +196,8 @@ public:
 
     bool start_array(size_t len) override
     {
+        if (++depth > maxDepth)
+            throw JSONParseError("JSON input exceeds maximum nesting depth of %d", maxDepth);
         rs = std::make_unique<JSONListState>(std::move(rs), len != std::numeric_limits<size_t>::max() ? len : 128);
         return true;
     }
