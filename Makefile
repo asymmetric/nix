@@ -1,4 +1,4 @@
-.PHONY: fuzz clean
+.PHONY: fuzz clean rebuild
 
 build: build-fuzz/tests/fuzz/fuzz-nix-parser
 
@@ -25,3 +25,5 @@ fuzz: build
 
 clean:
 	rm -rf build-fuzz
+
+rebuild: clean build

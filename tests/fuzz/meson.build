@@ -15,7 +15,7 @@ if get_option('fuzz')
     'libexpr.cc',
     dependencies : [libexpr_dep, libmain_dep],
     cpp_args : fuzzer_flags, # + coverage_flags,
-    link_args : fuzzer_flags, # + coverage_flags,
+    link_args: ['-fsanitize=fuzzer', '-static-libsan'],
     install : false,
   )
 endif
