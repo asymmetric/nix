@@ -479,8 +479,9 @@ Derivation parseDerivation(
         expect(str, '(');
         auto drvPath = parsePath(str);
         expect(str, ',');
-        drv.inputDrvs.map.insert_or_assign(
-            store.parseStorePath(*drvPath), parseDerivedPathMapNode(store, str, version));
+        auto storePath = store.parseStorePath(*drvPath);
+        storePath.requireDerivation();
+        drv.inputDrvs.map.insert_or_assign(std::move(storePath), parseDerivedPathMapNode(store, str, version));
         expect(str, ')');
     }
 
