@@ -1,4 +1,4 @@
-.PHONY: fuzz
+.PHONY: fuzz clean
 
 build: build-fuzz/tests/fuzz/fuzz-nix-parser
 
@@ -22,3 +22,6 @@ build-fuzz/meson-logs/meson-log.txt:
 # Run the fuzz target
 fuzz: build
 	./build-fuzz/tests/fuzz/fuzz-nix-parser -jobs=$(shell expr $$(nproc) / 2) outputs tests/fuzz/corpus/
+
+clean:
+	rm -rf build-fuzz
